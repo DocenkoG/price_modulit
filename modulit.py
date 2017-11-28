@@ -7,8 +7,56 @@ import sys
 import configparser
 import time
 # import elittech_downloader
-import modulit_converter
 import shutil
+import csv
+
+
+
+def convert2csv( dealerName ):
+    inFile  = open( 'new_'+dealerName +'.csv', 'r', newline='')
+    outFile = open(        dealerName +'.csv', 'w', newline='')
+    csvReader = csv.DictReader(inFile)
+    csvWriter = csv.DictWriter(outFile, fieldnames=[
+        'бренд',
+        'группа',
+        'подгруппа',
+        'код',
+        'код производителя',
+        'наименование',
+        'описание',
+        'закупка',
+        'продажа',
+        'валюта',
+        'наличие',
+        '?'])
+
+    for k in range (0, len(csvReader.fieldnames)):
+        csvReader.fieldnames[k] = csvReader.fieldnames[k].lower()
+    print(csvReader.fieldnames)
+    csvWriter.writeheader()
+    recOut = {}
+    for recIn in csvReader:
+        recOut['бренд']        = recIn['бренд']
+        recOut['группа']       = recIn['группа']
+        recOut['подгруппа']    = recIn['подгруппа']
+        recOut['код']          = recIn['наименование']
+        recOut['код производителя'] = recIn['код производителя']
+        recOut['наименование'] = recIn['бренд']+' '+recIn['наименование']+' '+recIn['описание']
+        recOut['описание']     = recIn['бренд']+' '+recIn['наименование']+' '+recIn['описание']+' Код продавца: '+recIn['артикул']+' код производителя: '+recIn['код производителя']
+        recOut['продажа']      = recIn['розничная']
+        try:
+            recOut['закупка']  = float(recIn['розничная']) * 0.7
+        except:
+            recOut['закупка']  = 0.1
+        #
+        recOut['валюта']       = recIn['валюта']
+        recOut['наличие']      = recIn['наличие']
+        recOut['?']            = '?'
+        #print(recOut)
+        csvWriter.writerow(recOut)
+    log.info('Обработано '+ str(csvReader.line_num) +'строк.')
+    inFile.close()
+    outFile.close()
 
 
 
@@ -93,8 +141,10 @@ def make_loger():
 def main( dealerName):
     make_loger()
     log.info('         '+dealerName )
-    if download( dealerName):
+    if  download( dealerName):
         convert2csv( dealerName )
+    priceName = dealerName+'.csv'
+    if os.path.exists( priceName   ) : shutil.copy2( priceName,    'c://AV_PROM/prices/' + dealerName +'/'+priceName)
     if os.path.exists( 'python.log') : shutil.copy2( 'python.log', 'c://AV_PROM/prices/' + dealerName +'/python.log')
     if os.path.exists( 'python.1'  ) : shutil.copy2( 'python.log', 'c://AV_PROM/prices/' + dealerName +'/python.1'  )
 
